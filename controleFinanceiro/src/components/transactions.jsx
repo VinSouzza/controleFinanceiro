@@ -1,64 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Typography, Select, MenuItem, FormControl, InputLabel, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import React, { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Grid,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 const TransactionPage = () => {
-  const [transactionType, setTransactionType] = useState('receita');
-  const [value, setValue] = useState('');
-  const [date, setDate] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
-  const [balance, setBalance] = useState(0); // Estado para o saldo total
-  const [transactions, setTransactions] = useState([]); // Estado para armazenar transações
+  const [transactionType, setTransactionType] = useState("receita");
+  const [value, setValue] = useState("");
+  const [date, setDate] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
   const navigate = useNavigate();
 
-  // Instanciando Firebase
   const auth = getAuth();
   const db = getFirestore();
 
-  // Verificar se o usuário está logado, caso contrário, redirecionar para o login
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
-      navigate('/login'); // Redirecionar para a página de login se o usuário não estiver logado
+      navigate("/login");
     }
     if (user) {
-      fetchBalance(user.uid); // Chama a função para buscar o saldo ao carregar a página
-      fetchTransactions(user.uid); // Chama a função para buscar as transações ao carregar a página
+      fetchBalance(user.uid);
+      fetchTransactions(user.uid);
     }
   }, [auth.currentUser, navigate]);
 
-  // Função para buscar e calcular o saldo total
   const fetchBalance = async (uid) => {
     try {
-      const transactionsCollection = collection(db, 'transactions');
-      const q = query(transactionsCollection, where('user.uid', '==', uid));
+      const transactionsCollection = collection(db, "transactions");
+      const q = query(transactionsCollection, where("user.uid", "==", uid));
       const querySnapshot = await getDocs(q);
 
       let totalBalance = 0;
       querySnapshot.forEach((doc) => {
         const transaction = doc.data();
-        if (transaction.tipo === 'receita') {
-          totalBalance += transaction.valor; // Soma as receitas
-        } else if (transaction.tipo === 'gasto') {
-          totalBalance -= transaction.valor; // Subtrai os gastos
+        if (transaction.tipo === "receita") {
+          totalBalance += transaction.valor;
+        } else if (transaction.tipo === "gasto") {
+          totalBalance -= transaction.valor;
         }
       });
 
-      setBalance(totalBalance); // Atualiza o saldo no estado
+      setBalance(totalBalance);
     } catch (err) {
-      console.error('Erro ao buscar transações:', err);
+      console.error("Erro ao buscar transações:", err);
     }
   };
 
-  // Função para buscar as transações do usuário
   const fetchTransactions = async (uid) => {
     try {
-      const transactionsCollection = collection(db, 'transactions');
-      const q = query(transactionsCollection, where('user.uid', '==', uid));
+      const transactionsCollection = collection(db, "transactions");
+      const q = query(transactionsCollection, where("user.uid", "==", uid));
       const querySnapshot = await getDocs(q);
 
       const userTransactions = [];
@@ -66,27 +90,25 @@ const TransactionPage = () => {
         userTransactions.push({ id: doc.id, ...doc.data() });
       });
 
-      setTransactions(userTransactions); // Armazena as transações no estado
+      setTransactions(userTransactions);
     } catch (err) {
-      console.error('Erro ao buscar transações:', err);
+      console.error("Erro ao buscar transações:", err);
     }
   };
 
-  // Função para adicionar transação
   const addTransaction = async () => {
     if (!value || !date || !description) {
-      setError('Por favor, preencha todos os campos!');
+      setError("Por favor, preencha todos os campos!");
       return;
     }
 
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('Usuário não autenticado');
+        throw new Error("Usuário não autenticado");
       }
 
-      // Adicionando transação no Firestore
-      const transactionsCollection = collection(db, 'transactions');
+      const transactionsCollection = collection(db, "transactions");
       await addDoc(transactionsCollection, {
         tipo: transactionType,
         valor: parseFloat(value),
@@ -95,123 +117,204 @@ const TransactionPage = () => {
         user: { uid: user.uid },
       });
 
-      // Atualizar o saldo após adicionar a transação
-      fetchBalance(user.uid); // Recalcula o saldo após adicionar a transação
-      fetchTransactions(user.uid); // Atualiza a lista de transações
+      fetchBalance(user.uid);
+      fetchTransactions(user.uid);
 
-      // Limpar campos após enviar
-      setValue('');
-      setDate('');
-      setDescription('');
-      setError('');
-      alert('Transação adicionada com sucesso!');
+      setValue("");
+      setDate("");
+      setDescription("");
+      setError("");
+      alert("Transação adicionada com sucesso!");
     } catch (err) {
-      setError('Erro ao adicionar transação: ' + err.message);
+      setError("Erro ao adicionar transação: " + err.message);
     }
   };
 
-  // Função para excluir transação
   const deleteTransaction = async (id) => {
     try {
-      const transactionDoc = doc(db, 'transactions', id);
+      const transactionDoc = doc(db, "transactions", id);
       await deleteDoc(transactionDoc);
 
-      // Atualiza o saldo e o histórico de transações após exclusão
       const user = auth.currentUser;
       if (user) {
         fetchBalance(user.uid);
         fetchTransactions(user.uid);
       }
 
-      alert('Transação excluída com sucesso!');
+      alert("Transação excluída com sucesso!");
     } catch (err) {
-      console.error('Erro ao excluir transação:', err);
-      alert('Erro ao excluir transação');
+      console.error("Erro ao excluir transação:", err);
+      alert("Erro ao excluir transação");
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    navigate("/");
+  };
+
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <Typography variant="h4" gutterBottom textAlign="center">
-        Adicionar Transação
-      </Typography>
-      {error && <Typography color="error" variant="body2" align="center">{error}</Typography>}
-
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Tipo de Transação</InputLabel>
-        <Select
-          value={transactionType}
-          onChange={(e) => setTransactionType(e.target.value)}
-          label="Tipo de Transação"
-        >
-          <MenuItem value="receita">Receita</MenuItem>
-          <MenuItem value="gasto">Gasto</MenuItem>
-        </Select>
-      </FormControl>
-
-      <TextField
-        fullWidth
-        label="Valor"
-        type="number"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        margin="normal"
-      />
-
-      <TextField
-        fullWidth
-        label="Data"
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        margin="normal"
-        InputLabelProps={{ shrink: true }}
-      />
-
-      <TextField
-        fullWidth
-        label="Descrição"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        margin="normal"
-      />
-
-      <Button
-        variant="contained"
-        onClick={addTransaction}
-        fullWidth
-        style={{ marginTop: '20px', backgroundColor:"#333" }}
+    <div
+      style={{
+        padding: "20px",
+        maxWidth: "800px",
+        margin: "0 auto",
+        backgroundColor: "#f9f9f9",
+      }}
+    >
+      <Paper
+        elevation={3}
+        style={{
+          padding: "20px",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+        }}
       >
-        Adicionar Transação
-      </Button>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <Button onClick={handleLogout} style={{ justifySelf: "start" }}>
+            <FontAwesomeIcon icon={faArrowLeft} color="red" fontSize={30} />
+          </Button>
+          <Typography
+            variant="h4"
+            style={{ textAlign: "center", justifySelf: "center" }}
+          >
+            Gerenciador de Transações
+          </Typography>
+        </div>
 
-      <Typography variant="h5" gutterBottom style={{ marginTop: '40px' }}>
-        Saldo Total: R${balance.toFixed(2)}
-      </Typography>
+        {error && (
+          <Typography color="error" variant="body2" align="center">
+            {error}
+          </Typography>
+        )}
 
-      <Typography variant="h5" gutterBottom>
-        Histórico de Transações
-      </Typography>
-
-      <List>
-        {transactions.map((transaction) => (
-          <ListItem key={transaction.id} divider>
-            <ListItemText
-              primary={`${transaction.data} - ${transaction.descricao}`}
-              secondary={`R$${transaction.valor.toFixed(2)} - ${transaction.tipo}`}
-            />
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => deleteTransaction(transaction.id)}
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth margin="normal">
+              <InputLabel sx={{ textAlign: "left" }}>
+                Tipo de Transação
+              </InputLabel>
+              <Select
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
+                label="Tipo de Transação"
+                sx={{
+                  textAlign: "left", // Alinha o texto dentro do Select
+                  display: "flex",
+                  justifyContent: "flex-start", // Alinha o conteúdo à esquerda
+                }}
               >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+                <MenuItem value="receita">Receita</MenuItem>
+                <MenuItem value="gasto">Gasto</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Valor"
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              margin="normal"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Data"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Descrição"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              margin="normal"
+            />
+          </Grid>
+        </Grid>
+
+        <Button
+          variant="contained"
+          onClick={addTransaction}
+          fullWidth
+          style={{
+            marginTop: "20px",
+            backgroundColor: "#1c3e87",
+            color: "#fff",
+          }}
+        >
+          Adicionar Transação
+        </Button>
+
+        <Typography
+          variant="h5"
+          gutterBottom
+          style={{ marginTop: "40px", textAlign: "center", color: "#1c3e87" }}
+        >
+          Saldo Total: R${balance.toFixed(2)}
+        </Typography>
+
+        <Typography variant="h5" gutterBottom style={{ marginTop: "20px" }}>
+          Histórico de Transações
+        </Typography>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Descrição</TableCell>
+                <TableCell>Valor</TableCell>
+                <TableCell>Data</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell>{transaction.descricao}</TableCell>
+                  <TableCell
+                    style={{
+                      color: transaction.tipo === "receita" ? "green" : "red",
+                    }}
+                  >
+                    R${transaction.valor.toFixed(2)}
+                  </TableCell>
+                  <TableCell>{transaction.data}</TableCell>
+                  <TableCell>{transaction.tipo}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => deleteTransaction(transaction.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </div>
   );
 };

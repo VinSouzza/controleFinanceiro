@@ -15,11 +15,9 @@ const App = () => {
   return (
     <Router>
       <div style={{ textAlign: "center" }}>
-        <h1>Gestão de Usuários</h1>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* Rota de transações protegida */}
           <Route path="/transactions" element={<PrivateRoute element={<Transactions />} />} />
         </Routes>
       </div>
