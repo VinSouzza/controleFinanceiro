@@ -5,12 +5,15 @@ import { auth, db } from "../firebaseConfig";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { Snackbar } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
 
 const Login = () => {
   const [username, setUsername] = useState("");
+  const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [showIcon, setShowIcon] = useState(false)
+  const [showIcon, setShowIcon] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
 
@@ -18,10 +21,17 @@ const Login = () => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false); 
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+    setOpen(false); 
     try {
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("nome", "==", username));
@@ -29,6 +39,7 @@ const Login = () => {
 
       if (querySnapshot.empty) {
         setError("Nome de usuário não encontrado.");
+        setOpen(true); 
         return;
       }
 
@@ -41,6 +52,7 @@ const Login = () => {
     } catch (err) {
       console.error(err);
       setError("Erro ao fazer login. Verifique suas credenciais.");
+      setOpen(true); 
     }
   };
 
@@ -51,8 +63,30 @@ const Login = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
+    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center", position: "relative" }}>
       <h1>Login</h1>
+      {error && (
+        <Snackbar
+          open={open}
+          autoHideDuration={2000}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }} 
+          sx={{
+            position: "absolute",
+            top: "80px",
+            width: "100%",
+            marginTop: "10px",
+            "@media (max-width: 600px)": { 
+              top: "60px", 
+            },
+          }}
+        >
+          <MuiAlert onClose={handleClose} severity="error" sx={{ width: "100%", borderRadius: "8px", boxShadow: 2 }}>
+            {error}
+          </MuiAlert>
+        </Snackbar>
+      )}
+      
       <form onSubmit={handleLogin}>
         <div>
           <input
@@ -94,7 +128,7 @@ const Login = () => {
             />
           )}
         </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+
         <button type="submit" style={{ padding: "10px 20px" }}>
           Login
         </button>

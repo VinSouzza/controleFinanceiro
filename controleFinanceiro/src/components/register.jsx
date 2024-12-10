@@ -5,22 +5,33 @@ import { auth, db } from "../firebaseConfig";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { Snackbar } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
 
 const Register = () => {
   const [name, setName] = useState(""); // Nome do usuário
   const [email, setEmail] = useState(""); // Email
   const [password, setPassword] = useState(""); // Senha
-  const [showIcon, setShowIcon] = useState(false)
+  const [showIcon, setShowIcon] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setOpen(true); // Exibe o Snackbar
 
     try {
       // Passo 1: Criar o usuário com Firebase Authentication
@@ -38,19 +49,44 @@ const Register = () => {
     } catch (err) {
       console.error(err);
       setError("Erro ao cadastrar. Verifique os dados e tente novamente.");
+      setOpen(true); // Exibe o Snackbar em caso de erro
     }
   };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    setShowIcon(value.length > 0); 
+    setShowIcon(value.length > 0);
   };
 
-
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
+    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center", position: "relative" }}>
+      {/* Exibindo a Snackbar logo acima do título */}
+      {error && (
+        <Snackbar
+          open={open}
+          autoHideDuration={2000}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }} // Posição no topo
+          sx={{
+            position: "absolute",
+            top: "70px", // Ajuste a posição para ficar logo acima do título
+            width: "100%",
+            marginTop: "10px", // Espaçamento entre a Snackbar e o título
+            zIndex: 9999, // Garante que fique acima de outros elementos
+            "@media (max-width: 600px)": {
+              top: "40px", // Ajuste para dispositivos móveis
+            },
+          }}
+        >
+          <MuiAlert onClose={handleClose} severity="error" sx={{ width: "100%", borderRadius: "8px", boxShadow: 2 }}>
+            {error}
+          </MuiAlert>
+        </Snackbar>
+      )}
+
       <h2>Cadastro</h2>
+
       <form onSubmit={handleRegister}>
         <div>
           <input
@@ -102,7 +138,6 @@ const Register = () => {
             />
           )}
         </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit" style={{ padding: "10px 20px" }}>
           Cadastrar
         </button>
