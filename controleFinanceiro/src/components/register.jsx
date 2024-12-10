@@ -3,12 +3,20 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const Register = () => {
   const [name, setName] = useState(""); // Nome do usuário
   const [email, setEmail] = useState(""); // Email
   const [password, setPassword] = useState(""); // Senha
+  const [showIcon, setShowIcon] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -32,6 +40,13 @@ const Register = () => {
       setError("Erro ao cadastrar. Verifique os dados e tente novamente.");
     }
   };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setShowIcon(value.length > 0); 
+  };
+
 
   return (
     <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
@@ -57,15 +72,35 @@ const Register = () => {
             style={{ width: "100%", padding: "8px", margin: "10px 0" }}
           />
         </div>
-        <div>
+        <div style={{ position: "relative" }}>
           <input
-            type="password"
+            type={passwordVisible ? "text" : "password"}
             placeholder="Senha"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handleInputChange}
             required
-            style={{ width: "100%", padding: "8px", margin: "10px 0" }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              margin: "10px 0",
+              paddingRight: "30px",
+            }}
           />
+          {showIcon && (
+            <FontAwesomeIcon
+              icon={passwordVisible ? faEyeSlash : faEye}
+              size="lg"
+              onClick={togglePasswordVisibility}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+                color: "#555",
+              }}
+            />
+          )}
         </div>
         {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit" style={{ padding: "10px 20px" }}>
