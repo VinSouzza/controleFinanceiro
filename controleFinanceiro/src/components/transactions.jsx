@@ -150,97 +150,62 @@ const TransactionPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("userToken");
-    navigate("/");
+    navigate("/login");
   };
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        maxWidth: "800px",
-        margin: "0 auto",
-        backgroundColor: "#f9f9f9",
-      }}
-    >
-      <Paper
-        elevation={3}
-        style={{
-          padding: "20px",
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "auto 1fr",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
-          <Button onClick={handleLogout} style={{ justifySelf: "start" }}>
-            <FontAwesomeIcon icon={faArrowLeft} color="red" fontSize={30} />
-          </Button>
-          <Typography
-            variant="h4"
-            style={{ textAlign: "center", justifySelf: "center" }}
-          >
-            Gerenciador de Transações
-          </Typography>
-        </div>
+    <Grid container spacing={2} justifyContent="center" style={{ padding: '20px' }}>
+      {/* Header and Logout */}
+      <Grid item xs={12} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <FontAwesomeIcon icon={faArrowLeft} size="lg" onClick={() => navigate("/home")} />
+        <Typography variant="h4">Transações</Typography>
+        <Button variant="contained" color="secondary" onClick={handleLogout}>
+          Logout
+        </Button>
+      </Grid>
 
-        {error && (
-          <Typography color="error" variant="body2" align="center">
-            {error}
-          </Typography>
-        )}
+      {/* Balance */}
+      <Grid item xs={12} sm={6}>
+        <Paper style={{ padding: '20px', textAlign: 'center' }}>
+          <Typography variant="h5">Saldo: R${balance.toFixed(2)}</Typography>
+        </Paper>
+      </Grid>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+      {/* Add Transaction Form */}
+      <Grid item xs={12} sm={6}>
+        <Paper style={{ padding: '20px' }}>
+          <Typography variant="h6">Adicionar Transação</Typography>
+          <form noValidate autoComplete="off">
             <FormControl fullWidth margin="normal">
-              <InputLabel sx={{ textAlign: "left" }}>
-                Tipo de Transação
-              </InputLabel>
+              <InputLabel>Tipo de Transação</InputLabel>
               <Select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}
-                label="Tipo de Transação"
-                sx={{
-                  textAlign: "left", // Alinha o texto dentro do Select
-                  display: "flex",
-                  justifyContent: "flex-start", // Alinha o conteúdo à esquerda
-                }}
               >
                 <MenuItem value="receita">Receita</MenuItem>
                 <MenuItem value="gasto">Gasto</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Valor"
-              type="number"
               value={value}
               onChange={(e) => setValue(e.target.value)}
               margin="normal"
+              type="number"
             />
-          </Grid>
 
-          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Data"
-              type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               margin="normal"
+              type="date"
               InputLabelProps={{ shrink: true }}
             />
-          </Grid>
 
-          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Descrição"
@@ -248,74 +213,58 @@ const TransactionPage = () => {
               onChange={(e) => setDescription(e.target.value)}
               margin="normal"
             />
-          </Grid>
-        </Grid>
 
-        <Button
-          variant="contained"
-          onClick={addTransaction}
-          fullWidth
-          style={{
-            marginTop: "20px",
-            backgroundColor: "#1c3e87",
-            color: "#fff",
-          }}
-        >
-          Adicionar Transação
-        </Button>
+            {error && <Typography color="error">{error}</Typography>}
 
-        <Typography
-          variant="h5"
-          gutterBottom
-          style={{ marginTop: "40px", textAlign: "center", color: "#1c3e87" }}
-        >
-          Saldo Total: R${balance.toFixed(2)}
-        </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={addTransaction}
+              style={{ marginTop: '10px' }}
+            >
+              Adicionar Transação
+            </Button>
+          </form>
+        </Paper>
+      </Grid>
 
-        <Typography variant="h5" gutterBottom style={{ marginTop: "20px" }}>
-          Histórico de Transações
-        </Typography>
-
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Descrição</TableCell>
-                <TableCell>Valor</TableCell>
-                <TableCell>Data</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{transaction.descricao}</TableCell>
-                  <TableCell
-                    style={{
-                      color: transaction.tipo === "receita" ? "green" : "red",
-                    }}
-                  >
-                    R${transaction.valor.toFixed(2)}
-                  </TableCell>
-                  <TableCell>{transaction.data}</TableCell>
-                  <TableCell>{transaction.tipo}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      edge="end"
-                      aria-label="delete"
-                      onClick={() => deleteTransaction(transaction.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
+      {/* Transaction Table */}
+      <Grid item xs={12} sm={12}>
+        <Paper style={{ padding: '20px' }}>
+          <Typography variant="h6">Histórico de Transações</Typography>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Data</TableCell>
+                  <TableCell>Descrição</TableCell>
+                  <TableCell>Valor</TableCell>
+                  <TableCell>Ação</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-    </div>
+              </TableHead>
+              <TableBody>
+                {transactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>{transaction.data}</TableCell>
+                    <TableCell>{transaction.descricao}</TableCell>
+                    <TableCell>{transaction.valor}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        color="secondary"
+                        onClick={() => deleteTransaction(transaction.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Grid>
+    </Grid>
   );
 };
 
