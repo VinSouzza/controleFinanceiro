@@ -49,7 +49,7 @@ const TransactionPage = () => {
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
-      navigate("/login");
+      navigate("/");
     }
     if (user) {
       fetchBalance(user.uid);
@@ -150,7 +150,7 @@ const TransactionPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("userToken");
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -177,7 +177,6 @@ const TransactionPage = () => {
           <Typography variant="h6">Adicionar Transação</Typography>
           <form noValidate autoComplete="off">
             <FormControl fullWidth margin="normal">
-              <InputLabel>Tipo de Transação</InputLabel>
               <Select
                 value={transactionType}
                 onChange={(e) => setTransactionType(e.target.value)}
