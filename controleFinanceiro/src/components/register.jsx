@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
+import { query, where, getDocs, collection } from "firebase/firestore";
 
 const Register = () => {
   const [name, setName] = useState(""); // Nome do usuário
@@ -28,30 +29,54 @@ const Register = () => {
     setOpen(false);
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
-    setOpen(true); // Exibe o Snackbar
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setError("");
+  setOpen(true); // Exibe o Snackbar
 
-    try {
-      // Passo 1: Criar o usuário com Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const { uid } = userCredential.user;
+  try {
+    // Verificar se o e-mail ou nome já existe no Firestore
+    const usersRef = collection(db, "users");
 
-      // Passo 2: Adicionar o usuário ao Firestore
-      await setDoc(doc(db, "users", uid), {
-        nome: name,
-        email: email,
-      });
+    // Consultar por e-mail
+    const emailQuery = query(usersRef, where("email", "==", email));
+    const emailSnapshot = await getDocs(emailQuery);
 
-      alert("Cadastro realizado com sucesso!");
-      // Redirecionar ou limpar o formulário, se necessário
-    } catch (err) {
-      console.error(err);
-      setError("Erro ao cadastrar. Verifique os dados e tente novamente.");
-      setOpen(true); // Exibe o Snackbar em caso de erro
+    if (!emailSnapshot.empty) {
+      setError("E-mail já cadastrado.");
+      setOpen(true);
+      return;
     }
-  };
+
+    // Consultar por nome
+    const nameQuery = query(usersRef, where("nome", "==", name));
+    const nameSnapshot = await getDocs(nameQuery);
+
+    if (!nameSnapshot.empty) {
+      setError("Nome de usuário já cadastrado.");
+      setOpen(true);
+      return;
+    }
+
+    // Criar o usuário com Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const { uid } = userCredential.user;
+
+    // Adicionar o usuário ao Firestore
+    await setDoc(doc(db, "users", uid), {
+      nome: name,
+      email: email,
+    });
+
+    alert("Cadastro realizado com sucesso!");
+    // Redirecionar ou limpar o formulário, se necessário
+  } catch (err) {
+    console.error(err);
+    setError("Erro ao cadastrar. Verifique os dados e tente novamente.");
+    setOpen(true); // Exibe o Snackbar em caso de erro
+  }
+};
+
 
   const handleInputChange = (e) => {
     const value = e.target.value;
