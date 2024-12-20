@@ -102,6 +102,11 @@ const TransactionPage = () => {
       return;
     }
 
+    if (value.length > 5 ){
+      setError("O valor não pode ser maior que 5 dígitos")
+      return;
+    }
+
     try {
       const user = auth.currentUser;
       if (!user) {
